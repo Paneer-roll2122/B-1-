@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus + Habit Studio</title>
+  <style>
+    :root {
+      --paper: #f7f2ea;
+      --card: #fffdf9;
+      --ink: #2b2620;
+      --muted: #8a7f6f;
+      --line: #e7dfd2;
+      --amber: #e2ad27;
+      --amber-dim: #f0dcae;
+      --sage: #56705a;
+      --sage-dim: #dce6dc;
+      --accent: #5b7553;
+      --accent-soft: #eef4ea;
+      --bg: #f3efe8;
+      --border: #e3e0d8;
+      --weekend: #f0ede6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, var(--paper), var(--bg));
+      color: var(--ink);
+      font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+      padding: 32px 18px 60px;
+    }
+
+    .app {
+      max-width: 920px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .shell {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 10px 32px rgba(43, 38, 32, 0.08);
+      padding: 24px 24px 28px;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .eyebrow {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.73rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--amber);
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      font-size: 1.9rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .lede {
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      max-width: 680px;
+    }
+
+    .toggle {
+      display: inline-flex;
+      gap: 8px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px;
+      flex-wrap: wrap;
+    }
+
+    .toggle button {
+      border: none;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font: inherit;
+      cursor: pointer;
+      background: transparent;
+      color: var(--ink);
+      transition: background 0.16s ease, color 0.16s ease;
+    }
+
+    .toggle button.active {
+      background: var(--amber);
+      color: #fff;
+    }
+
+    [hidden] { display: none !important; }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 4px 18px rgba(43, 38, 32, 0.05);
+    }
+
+    .timer-card {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .dial-wrap {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      margin: 0 auto 24px;
+    }
+
+    svg.dial { transform: rotate(-90deg); }
+    .dial-track { fill: none; stroke: var(--line); stroke-width: 10; }
+    .dial-progress {
+      fill: none;
+      stroke: var(--amber);
+      stroke-width: 10;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.3s linear, stroke 0.4s ease;
+    }
+    .dial-progress.done { stroke: var(--sage); }
+
+    .dial-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .dial-time {
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dial-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 4px;
+    }
+
+    .presets {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .chip:hover { border-color: var(--amber); }
+    .chip.active { background: var(--amber); border-color: var(--amber); color: #fff; }
+
+    .custom-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .custom-row input {
+      width: 64px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      text-align: center;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      font-family: system-ui, -apple-system, sans-serif;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--amber); color: #fff; }
+    .btn-secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .status-banner {
+      margin-top: 20px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--sage-dim);
+      color: var(--sage);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: none;
+    }
+    .status-banner.show { display: block; }
+
+    .section-title { font-size: 1.25rem; margin: 0 0 4px; }
+    .section-sub {
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin: 0 0 18px;
+    }
+
+    .field { margin-bottom: 16px; font-family: system-ui, -apple-system, sans-serif; }
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .field input[type="number"],
+    .field input[type="text"],
+    .field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      background: var(--paper);
+      resize: vertical;
+    }
+    .field textarea { min-height: 90px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .save-row { display: flex; justify-content: flex-end; font-family: system-ui, -apple-system, sans-serif; }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .export-link {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.8rem;
+      color: var(--amber);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+    }
+    .entry {
+      border-left: 3px solid var(--amber);
+      background: var(--card);
+      border-radius: 0 12px 12px 0;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .entry-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .entry-stats { font-size: 0.88rem; margin-bottom: 6px; }
+    .entry-stats b { color: var(--ink); }
+    .entry-notes { font-size: 0.88rem; color: var(--ink); line-height: 1.4; }
+    .empty-log {
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .footnote {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .tracker-card {
+      overflow: hidden;
+    }
+
+    .tracker-card table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .tracker-card th {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      padding: 12px 6px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .tracker-card th:first-child {
+      text-align: left;
+      padding-left: 16px;
+    }
+
+    .tracker-card td {
+      padding: 10px 6px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .tracker-card td:first-child {
+      text-align: left;
+      padding-left: 16px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .tracker-card tbody tr:nth-child(even) { background: var(--weekend); }
+    .tracker-card tbody tr:hover { background: #eef1ea; }
+    .date-num { font-weight: 600; }
+    .day-name { color: var(--muted); font-size: 0.78rem; display: block; }
+    .tracker-card input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 15px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    @media (max-width: 680px) {
+      .topbar { align-items: flex-start; }
+      .toggle { width: 100%; }
+      .toggle button { flex: 1; }
+      .two-col { grid-template-columns: 1fr; }
+      .tracker-card th, .tracker-card td { padding: 8px 4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="shell">
+      <div class="topbar">
+        <div>
+          <p class="eyebrow">Daily focus studio</p>
+          <h1>Focus Timer + Habit Tracker</h1>
+          <p class="lede">Switch between a timed study session and a 14-day habit check-in whenever you need to reset your attention.</p>
+        </div>
+        <div class="toggle" role="tablist" aria-label="Switch workspace view">
+          <button class="active" data-view="focus" role="tab">Focus Timer</button>
+          <button data-view="habit" role="tab">Habit Tracker</button>
+        </div>
+      </div>
+
+      <div id="focus-view" class="page-grid">
+        <div class="card timer-card">
+          <div class="dial-wrap">
+            <svg class="dial" width="240" height="240" viewBox="0 0 240 240">
+              <circle class="dial-track" cx="120" cy="120" r="104"></circle>
+              <circle id="dialProgress" class="dial-progress" cx="120" cy="120" r="104" stroke-dasharray="653.45" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="dial-center">
+              <div class="dial-time" id="dialTime">45:00</div>
+              <div class="dial-label" id="dialLabel">ready</div>
+            </div>
+          </div>
+
+          <div class="presets" id="presets">
+            <button class="chip" data-min="25">25 min</button>
+            <button class="chip active" data-min="45">45 min</button>
+            <button class="chip" data-min="60">60 min</button>
+          </div>
+
+          <div class="custom-row">
+            <span>custom:</span>
+            <input type="number" id="customMinutes" min="1" max="300" placeholder="min" />
+            <button class="chip" id="applyCustom">set</button>
+          </div>
+
+          <div class="controls">
+            <button class="btn btn-primary" id="startBtn">Start</button>
+            <button class="btn btn-secondary" id="pauseBtn" disabled>Pause</button>
+            <button class="btn btn-secondary" id="resetBtn">Reset</button>
+          </div>
+
+          <div class="status-banner" id="statusBanner">Session complete — nice work. Log it below.</div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">Reflection</h2>
+          <p class="section-sub">Every session is only as useful as what you take from it.</p>
+
+          <div class="two-col">
+            <div class="field">
+              <label for="plannedMin">Planned (min)</label>
+              <input type="number" id="plannedMin" min="0" placeholder="45" />
+            </div>
+            <div class="field">
+              <label for="actualMin">Actually studied (min)</label>
+              <input type="number" id="actualMin" min="0" placeholder="e.g. 30" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="topic">Topic / focus (optional)</label>
+            <input type="text" id="topic" placeholder="e.g. DSA — graphs" />
+          </div>
+          <div class="field">
+            <label for="improve">What could improve next time?</label>
+            <textarea id="improve" placeholder="Distractions, energy, pacing, what to change..."></textarea>
+          </div>
+          <div class="save-row">
+            <button class="btn btn-primary" id="saveEntry">Save entry</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="log-header">
+            <span style="font-family: system-ui, sans-serif; font-size:0.85rem; color:var(--muted);">Session log</span>
+            <button class="export-link" id="exportLog">Download log (.txt)</button>
+          </div>
+
+          <div id="logList">
+            <div class="empty-log" id="emptyLog">No entries yet — finish a session and save your first reflection.</div>
+          </div>
+
+          <p class="footnote">Entries are kept in this browser and will reload when you return.</p>
+        </div>
+      </div>
+
+      <div id="habit-view" class="page-grid" hidden>
+        <div class="card tracker-card">
+          <h2 class="section-title">14-Day Habit Tracker</h2>
+          <p class="section-sub">Mark your habits as you go and keep momentum visible.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>DSA</th>
+                <th>Development</th>
+                <th>AI/ML</th>
+                <th>Workout</th>
+              </tr>
+            </thead>
+            <tbody id="tracker-body"></tbody>
+          </table>
+          <p class="footer-note">Click a checkbox to mark a habit as done for that day.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const viewButtons = document.querySelectorAll('.toggle button');
+    const focusView = document.getElementById('focus-view');
+    const habitView = document.getElementById('habit-view');
+
+    function setView(view) {
+      const isHabit = view === 'habit';
+      focusView.hidden = isHabit;
+      habitView.hidden = !isHabit;
+      viewButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+      localStorage.setItem('studio-view', view);
+    }
+
+    viewButtons.forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+    setView(localStorage.getItem('studio-view') || 'focus');
+
+    // Focus timer
+    let plannedSeconds = 45 * 60;
+    let remainingSeconds = plannedSeconds;
+    let timerInterval = null;
+    let running = false;
+
+    const CIRC = 2 * Math.PI * 104;
+
+    const dialProgress = document.getElementById('dialProgress');
+    const dialTime = document.getElementById('dialTime');
+    const dialLabel = document.getElementById('dialLabel');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusBanner = document.getElementById('statusBanner');
+    const presets = document.getElementById('presets');
+    const customMinutes = document.getElementById('customMinutes');
+    const applyCustom = document.getElementById('applyCustom');
+    const plannedMinField = document.getElementById('plannedMin');
+    const actualMinField = document.getElementById('actualMin');
+
+    dialProgress.setAttribute('stroke-dasharray', CIRC.toFixed(2));
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function renderDial() {
+      dialTime.textContent = formatTime(remainingSeconds);
+      const fraction = plannedSeconds > 0 ? remainingSeconds / plannedSeconds : 0;
+      dialProgress.setAttribute('stroke-dashoffset', (CIRC * (1 - fraction)).toFixed(2));
+    }
+
+    function setPlanned(minutes) {
+      if (running) return;
+      plannedSeconds = Math.max(1, Math.round(minutes)) * 60;
+      remainingSeconds = plannedSeconds;
+      dialProgress.classList.remove('done');
+      dialLabel.textContent = 'ready';
+      statusBanner.classList.remove('show');
+      plannedMinField.value = minutes;
+      renderDial();
+    }
+
+    presets.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        presets.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        setPlanned(Number(chip.dataset.min));
+      });
+    });
+
+    applyCustom.addEventListener('click', () => {
+      const val = Number(customMinutes.value);
+      if (val > 0) {
+        presets.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        setPlanned(val);
+      }
+    });
+
+    function playChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99];
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.0001, ctx.currentTime + i * 0.18);
+          gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + i * 0.18 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.18 + 0.5);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(ctx.currentTime + i * 0.18);
+          osc.stop(ctx.currentTime + i * 0.18 + 0.55);
+        });
+      } catch (e) { /* audio unavailable */ }
+    }
+
+    function tick() {
+      remainingSeconds -= 1;
+      if (remainingSeconds <= 0) {
+        remainingSeconds = 0;
+        renderDial();
+        finishSession();
+        return;
+      }
+      renderDial();
+    }
+
+    function finishSession() {
+      clearInterval(timerInterval);
+      running = false;
+      dialLabel.textContent = 'done';
+      dialProgress.classList.add('done');
+      startBtn.textContent = 'Start';
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      statusBanner.classList.add('show');
+      playChime();
+      actualMinField.value = Math.round(plannedSeconds / 60);
+      plannedMinField.value = Math.round(plannedSeconds / 60);
+      document.querySelector('.card .section-title')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (running) return;
+      running = true;
+      dialLabel.textContent = 'focusing';
+      statusBanner.classList.remove('show');
+      startBtn.textContent = 'Running...';
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      timerInterval = setInterval(tick, 1000);
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      if (!running) return;
+      clearInterval(timerInterval);
+      running = false;
+      dialLabel.textContent = 'paused';
+      startBtn.textContent = 'Resume';
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      running = false;
+      remainingSeconds = plannedSeconds;
+      dialProgress.classList.remove('done');
+      dialLabel.textContent = 'ready';
+      startBtn.textContent = 'Start';
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      statusBanner.classList.remove('show');
+      renderDial();
+    });
+
+    plannedMinField.value = Math.round(plannedSeconds / 60);
+    renderDial();
+
+    const sessionLog = JSON.parse(localStorage.getItem('focus-session-log') || '[]');
+    const logList = document.getElementById('logList');
+    const emptyLog = document.getElementById('emptyLog');
+    const saveEntry = document.getElementById('saveEntry');
+    const topicField = document.getElementById('topic');
+    const improveField = document.getElementById('improve');
+    const exportLogBtn = document.getElementById('exportLog');
+
+    function renderLog() {
+      logList.innerHTML = '';
+      if (sessionLog.length === 0) {
+        logList.appendChild(emptyLog);
+        return;
+      }
+      sessionLog.slice().reverse().forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `
+          <div class="entry-meta">
+            <span>${entry.timestamp}</span>
+            <span>${entry.topic ? entry.topic : ''}</span>
+          </div>
+          <div class="entry-stats">Planned <b>${entry.planned} min</b> &middot; Actual <b>${entry.actual} min</b></div>
+          ${entry.notes ? `<div class="entry-notes">${entry.notes}</div>` : ''}
+        `;
+        logList.appendChild(div);
+      });
+    }
+
+    saveEntry.addEventListener('click', () => {
+      const planned = Number(plannedMinField.value) || 0;
+      const actual = Number(actualMinField.value) || 0;
+      const notes = improveField.value.trim();
+      const topic = topicField.value.trim();
+
+      if (!actual && !notes) {
+        actualMinField.focus();
+        return;
+      }
+
+      const now = new Date();
+      const timestamp = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) +
+        ' · ' + now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+      sessionLog.push({ timestamp, planned, actual, topic, notes: escapeHtml(notes) });
+      localStorage.setItem('focus-session-log', JSON.stringify(sessionLog));
+      renderLog();
+
+      actualMinField.value = '';
+      topicField.value = '';
+      improveField.value = '';
+    });
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    exportLogBtn.addEventListener('click', () => {
+      if (sessionLog.length === 0) return;
+      let text = 'Focus Timer — Session Log\n\n';
+      sessionLog.forEach(e => {
+        text += `${e.timestamp}\n`;
+        if (e.topic) text += `Topic: ${e.topic}\n`;
+        text += `Planned: ${e.planned} min | Actual: ${e.actual} min\n`;
+        if (e.notes) text += `Improve: ${e.notes}\n`;
+        text += '\n';
+      });
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'focus-session-log.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    renderLog();
+
+    // Habit tracker
+    const startDate = new Date(2026, 6, 1);
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const tbody = document.getElementById('tracker-body');
+    const habitStorageKey = 'merged-habit-tracker-state';
+    let habitState = JSON.parse(localStorage.getItem(habitStorageKey) || '{}');
+
+    function renderHabits() {
+      tbody.innerHTML = '';
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+
+        const row = document.createElement('tr');
+
+        const dateCell = document.createElement('td');
+        dateCell.innerHTML = `<span class="date-num">${d.getDate()} Jul</span><span class="day-name">${dayNames[d.getDay()]}</span>`;
+        row.appendChild(dateCell);
+
+        for (let h = 0; h < 4; h++) {
+          const cell = document.createElement('td');
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.dataset.row = String(i);
+          checkbox.dataset.habit = String(h);
+          checkbox.checked = Boolean(habitState[`${i}-${h}`]);
+          checkbox.addEventListener('change', () => {
+            habitState[`${i}-${h}`] = checkbox.checked;
+            localStorage.setItem(habitStorageKey, JSON.stringify(habitState));
+          });
+          cell.appendChild(checkbox);
+          row.appendChild(cell);
+        }
+
+        tbody.appendChild(row);
+      }
+    }
+
+    renderHabits();
+  </script>
+</body>
+</html>
